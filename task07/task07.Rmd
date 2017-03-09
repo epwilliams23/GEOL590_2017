@@ -1,0 +1,161 @@
+---
+title: "Task_07"
+author: "Evan Williams"
+date: "March 7, 2017"
+output: 
+  md_document:
+    variant: markdown_github
+---
+
+
+```{r}
+
+
+library(nycflights13)
+library(tidyverse)
+library(babynames)
+library(ggplot2)
+library(nasaweather)
+
+
+
+weather.df<-nycflights13::weather
+windspeed.df<- weather.df["wind_speed"]
+flights.df<- nycflights13::flights
+atmos_factors<-nasaweather::atmos
+
+
+### Visual rep of data
+
+ggplot(weather.df,
+       aes(x=time_hour, y= wind_speed))+
+  geom_point()
+
+### One data point stood out as an outlier as the speed was over 1200km/h
+
+### filter point out by filtering windspeeds over 200
+
+windspeed.df <- weather.df %>%
+  group_by(wind_speed) %>%
+  filter(wind_speed < 200)
+
+  ### What direction has the highest median speed at each airport. 
+
+  median_wind_speed <- weather.df %>% 
+    na.omit(wind_dir)%>%                      ### removes N/A
+    filter(wind_speed <250)%>% 
+    group_by(origin, wind_dir)%>%
+    summarise(median_wind_speed = median(wind_speed))%>%
+    print()
+  
+### Plot of median wind speed at each airport
+  
+  ggplot(median_wind_speed, aes(x = wind_dir, y = median_wind_speed))+ 
+    geom_point()+
+    facet_wrap(~origin)
+  
+  ### Make a table with two columns: airline name and median distance flown from JFK airport.
+  ### The table should be arranged in order of decreasing mean flight distance.
+  
+med_dist_flown<- flights.df %>% 
+  inner_join(airlines)%>% 
+  select(name, origin, distance)%>% 
+  filter(origin=="JFK")%>% 
+  group_by(name)%>% 
+  arrange(desc(distance))%>% 
+  summarise(median_dist_JFK = median(distance))%>%
+  print()
+
+### Make a wide-format data frame that displays the number of flights that 
+### leave Newark ("EWR") airport each month,from each airline
+
+ewr.df <- nycflights13::flights%>% 
+  filter(origin == "EWR")%>% 
+  left_join(airlines)%>%
+  select(origin, month, name)%>%
+  group_by(name, month)%>% 
+  summarise(Flights = n())%>% 
+  spread(month, Flights, fill = NA, convert = FALSE, drop = TRUE, sep = NULL)%>%
+  print()
+  
+### Identify the ten most common male and female names in 2014. 
+### Make a plot of their frequency (prop) since 1880. 
+
+
+bn<- babynames
+
+### top 10 female names
+
+top_female_names2014<-bn%>%
+  filter(year==2014, sex=="F")%>%
+  group_by(sex)%>%
+  top_n(10,n)%>%
+  print()
+
+### top  10 male names
+
+top_male_names2014<-bn%>%
+  filter(year==2014, sex=="M")%>%
+  group_by(sex)%>%
+  top_n(10,n)%>%
+  print()
+
+### Make a plot of their frequency (prop) since 1880
+ 
+  ### plot 10 female names ploted
+
+    ###Determining the top names
+
+female_names_plot <- bn %>%
+  filter(sex == "F") %>%
+  filter(name %in% top_female_names2014$name) %>%
+  select(year,sex,name,prop) %>%
+  group_by(name)
+
+    ### PLoting the top names
+
+ggplot(female_names_plot, 
+       aes(x=year, y=prop, color=name))+
+  geom_point()
+
+### plot 10 male names ploted
+
+    ###Determining the top names
+male_names_plot <- babynames %>%
+  filter(sex == "M") %>%
+  filter(name %in% top_male_names2014$name) %>%
+  select(year,sex,name,prop) %>%
+  group_by(name)
+
+### PLoting the top names
+
+ggplot(male_names_plot, 
+       aes(x=year, y=prop, color=name))+
+         geom_point()
+
+
+
+
+### Make a single table of the 26th through 29th most common girls names in the year 1896, 1942, and 2016
+
+common<-bn%>%
+  filter(year==1896 | year==1942 | year==2016, sex== "F" )%>%
+  group_by(year)%>%
+  top_n(29,prop)%>%
+  top_n(-4,prop)%>%
+  print()
+
+
+### I used the the nasaweather dataset and determined the average surface temperature
+### and temp (dont really know what this is) during the month of January in the year 2000
+
+head(nasaweather::atmos)
+
+delta_temp<-nasaweather::atmos%>%
+  filter(year==2000, month==1)%>%
+  summarise(mean(surftemp), mean(temp))
+
+
+```
+
+
