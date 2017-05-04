@@ -1,0 +1,100 @@
+Write a function that fulfills the following criteria:
+======================================================
+
+It should be tidyverse compatible (i.e., the first argument must be a
+data frame) It should add two arbitrary columns of the data frame
+(specified by the user) and put them in a new column of that data frame,
+with the name of the new column specified by the user It should throw an
+informative warning if any invalid arguments are provided. Invalid
+arguments might include:The first argument is not a data frame If the
+columns to add aren't valid but the new column name is, the function
+should create a column of NA values
+
+    addition_of_columns<-function(data_frame, col.1, col.2, add.col) {
+      
+      if(class(data_frame) != "data.frame") {
+        warning("User did not supply the data frame") 
+      }
+      #sends a warning that the data frame is not a data frame
+      
+      
+      if(!(col.1 %in% colnames(data_frame)) | !(col.2 %in% colnames(data_frame))) {
+        warning("One/both supplied columns are not found in the data frame") 
+      }
+      #sends warning that one of the columns to be added is not found in supplied data frame
+      
+      
+      tryCatch(data_frame$sum.col <- (data_frame[, col.1] + data_frame[, col.2]),  
+               warning=function(a){
+                 message("Values to be add contain non-numeric values")
+                 return(NA)
+               })
+      #Function runs and sends a waning if non-numeric values are said to be added
+      
+      return(data_frame)
+    }
+
+Function Testing
+================
+
+    #Function proceeds as normal
+    normal<-addition_of_columns(mtcars,"mpg","cyl",add.col)
+
+    #Sequence provided instead of data frame
+    #Sends warning that data frame is not supplied
+
+    sequence<-seq(0,10,2)
+
+    #Test kept giving me errors when trying to knit
+
+Loop and performance metric tasks
+=================================
+
+Write a function named that uses a for loop to calculate the sum of the
+elements of a vector, which is passed as an argument (i.e., it should do
+the same thing that sum() does with vectors). your\_fun(1:10^4) should
+return 50005000. Use the microbenchmark::microbenchmark function to
+compare the performace of your function to that of sum in adding up the
+elements of the vector 1:10^4. The benchmarking code should look
+something like:
+
+    library(microbenchmark)
+
+    #Loop funtion I wrote
+    my_sum<-function(x){
+      vector<-0
+      for(i in x){
+        vector= vector + i
+      }
+      return(vector)
+    }
+
+    # testing of the functionfunction 
+    fun.test<-1:10^4
+
+
+    #testing difference between my function and sum()
+    my_sum(fun.test)
+
+    ## [1] 50005000
+
+    sum(fun.test)
+
+    ## [1] 50005000
+
+    microbenchmark(
+      my_sum(fun.test),
+      sum(fun.test)
+    )
+
+    ## Unit: microseconds
+    ##              expr     min      lq      mean   median      uq     max neval
+    ##  my_sum(fun.test) 269.493 271.317 294.30558 281.5275 317.995 348.991   100
+    ##     sum(fun.test)   5.470   5.471   6.15635   5.8360   6.565   9.482   100
+
+Is there a difference? Why?
+===========================
+
+Yes, my function takes longer(time) to complete. The for loop function
+has a longer calulation time and the sum function is more effienct as it
+is a basic function that has most likely been optimized a great deal.
